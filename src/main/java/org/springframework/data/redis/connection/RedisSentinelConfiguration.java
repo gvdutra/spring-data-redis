@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the original author or authors.
+ * Copyright 2014-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,12 +39,14 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Thomas Darimont
  * @author Mark Paluch
+ * @author Vikas Garg
  * @since 1.4
  */
 public class RedisSentinelConfiguration implements RedisConfiguration, SentinelConfiguration {
 
 	private static final String REDIS_SENTINEL_MASTER_CONFIG_PROPERTY = "spring.redis.sentinel.master";
 	private static final String REDIS_SENTINEL_NODES_CONFIG_PROPERTY = "spring.redis.sentinel.nodes";
+	private static final String REDIS_SENTINEL_USERNAME_CONFIG_PROPERTY = "spring.redis.sentinel.username";
 	private static final String REDIS_SENTINEL_PASSWORD_CONFIG_PROPERTY = "spring.redis.sentinel.password";
 
 	private @Nullable NamedNode master;
@@ -52,6 +54,7 @@ public class RedisSentinelConfiguration implements RedisConfiguration, SentinelC
 	private int database;
 
 	private @Nullable String dataNodeUsername = null;
+	private @Nullable String sentinelUsername = null;
 	private RedisPassword dataNodePassword = RedisPassword.none();
 	private RedisPassword sentinelPassword = RedisPassword.none();
 
@@ -106,6 +109,10 @@ public class RedisSentinelConfiguration implements RedisConfiguration, SentinelC
 
 		if (propertySource.containsProperty(REDIS_SENTINEL_PASSWORD_CONFIG_PROPERTY)) {
 			this.setSentinelPassword(propertySource.getProperty(REDIS_SENTINEL_PASSWORD_CONFIG_PROPERTY).toString());
+		}
+
+		if (propertySource.containsProperty(REDIS_SENTINEL_USERNAME_CONFIG_PROPERTY)) {
+			this.setSentinelUsername(propertySource.getProperty(REDIS_SENTINEL_USERNAME_CONFIG_PROPERTY).toString());
 		}
 	}
 
@@ -272,6 +279,25 @@ public class RedisSentinelConfiguration implements RedisConfiguration, SentinelC
 
 	/*
 	 * (non-Javadoc)
+	 * @see org.springframework.data.redis.connection.RedisConfiguration.SentinelConfiguration#getSentinelUsername()
+	 */
+	@Nullable
+	@Override
+	public String getSentinelUsername() {
+		return this.sentinelUsername;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see org.springframework.data.redis.connection.RedisConfiguration.SentinelConfiguration#setSentinelUsername(String)
+ 	 */
+	@Override
+	public void setSentinelUsername(@Nullable String sentinelUsername) {
+		this.sentinelUsername = sentinelUsername;
+	}
+
+	/*
+	 * (non-Javadoc)
 	 * @see org.springframework.data.redis.connection.RedisConfiguration.SentinelConfiguration#setSentinelPassword(org.springframework.data.redis.connection.RedisPassword)
 	 */
 	public void setSentinelPassword(RedisPassword sentinelPassword) {
@@ -317,6 +343,9 @@ public class RedisSentinelConfiguration implements RedisConfiguration, SentinelC
 		if (!ObjectUtils.nullSafeEquals(dataNodePassword, that.dataNodePassword)) {
 			return false;
 		}
+		if (!ObjectUtils.nullSafeEquals(sentinelUsername, that.sentinelUsername)) {
+			return false;
+		}
 		return ObjectUtils.nullSafeEquals(sentinelPassword, that.sentinelPassword);
 	}
 
@@ -331,6 +360,7 @@ public class RedisSentinelConfiguration implements RedisConfiguration, SentinelC
 		result = 31 * result + database;
 		result = 31 * result + ObjectUtils.nullSafeHashCode(dataNodeUsername);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(dataNodePassword);
+		result = 31 * result + ObjectUtils.nullSafeHashCode(sentinelUsername);
 		result = 31 * result + ObjectUtils.nullSafeHashCode(sentinelPassword);
 		return result;
 	}
